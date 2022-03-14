@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">MyBrowser</string>
+
+    <string name="str_err_cleartext">net::ERR_CLEARTEXT_NOT_PERMITTED</string>
+</resources>

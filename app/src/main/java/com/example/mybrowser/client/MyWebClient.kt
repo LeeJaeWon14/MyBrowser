@@ -20,7 +20,7 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
             }
         }
         binding.url.text = url
-        Log.e("Web", view?.context?.getString(R.string.str_page_started)!!)
+        Log.e("Web", view?.context?.getString(R.string.str_page_started) + ", $url")
     }
 
     override fun onPageFinished(view: WebView?, url: String?) {

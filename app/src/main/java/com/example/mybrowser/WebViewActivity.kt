@@ -68,7 +68,12 @@ class WebViewActivity : AppCompatActivity() {
             ivPrev.setOnClickListener { wvWebView.goBack() }
 
             ivHome.apply {
-                setOnClickListener { wvWebView.loadUrl(homeUrl) }
+                setOnClickListener { 
+                    if(homeUrl.isEmpty())
+                        Toast.makeText(this@WebViewActivity, getString(R.string.str_empty_home_url), Toast.LENGTH_SHORT).show()
+                    else
+                        wvWebView.loadUrl(homeUrl)
+                }
                 setOnLongClickListener {
                     val dlgBinding = DialogUrlSearchBinding.inflate(layoutInflater)
                     val dlg = AlertDialog.Builder(this@WebViewActivity).create()
@@ -90,7 +95,7 @@ class WebViewActivity : AppCompatActivity() {
                                                 "저장되었습니다.",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            homeUrlLive.postValue(v.text.toString())
+                                            homeUrlLive.postValue(makeUrl(v.text.toString()))
                                             keyManager.hideSoftInputFromWindow(currentFocus?.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
                                             dlg.dismiss()
                                         }

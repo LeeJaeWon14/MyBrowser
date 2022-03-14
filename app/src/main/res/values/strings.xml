@@ -7,4 +7,5 @@
     <string name="str_page_finished">page finished</string>
     <string name="str_unknown_error">알수없는 에러가 발생하였습니다.</string>
     <string name="str_empty_msg">좌측 상단 버튼을 길게 눌러서\n홈페이지를 먼저 설정해주세요</string>
+    <string name="str_empty_home_url">홈페이지를 먼저 설정해주세요</string>
 </resources>

@@ -35,10 +35,23 @@ class WebViewActivity : AppCompatActivity() {
 
         keyManager = getSystemService(InputMethodManager::class.java)
 
+
+//        initBeforeStartBrowser()
         homeUrlLive.value = Pref.getInstance(this)?.getString(Pref.HOME)
         homeUrlLive.observe(this, Observer {
+            Log.e("web", "homeUrl Changed")
             initUi(it)
         })
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
+    }
+
+    private fun initBeforeStartBrowser() {
+
+
     }
 
     private fun initUi(homeUrl: String) {
@@ -54,7 +67,10 @@ class WebViewActivity : AppCompatActivity() {
                     textZoom = 95 // Set text size in WebView, Default is 100.
                 }
                 if(isEmptyHome(homeUrl).not())
+                {
                     loadUrl(homeUrl)
+                    Log.e("web", "url load")
+                }
             }
 
             slWebLayout.apply {
@@ -162,6 +178,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun isEmptyHome(homeUrl: String) : Boolean {
+        Log.e("web", "$homeUrl")
         binding.apply {
             tvEmptyMsg.isVisible = homeUrl.isEmpty()
             slWebLayout.isVisible = homeUrl.isEmpty().not()

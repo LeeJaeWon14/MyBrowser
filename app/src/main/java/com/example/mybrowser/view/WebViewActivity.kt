@@ -1,5 +1,6 @@
 package com.example.mybrowser.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.inputmethod.EditorInfo
@@ -37,7 +38,7 @@ class WebViewActivity : AppCompatActivity() {
 
         keyManager = getSystemService(InputMethodManager::class.java)
 
-        homeUrlLive.value = Pref.getInstance(this)?.getString(Pref.HOME)
+        homeUrlLive.value = Pref.getInstance(this)?.getString(Pref.HOME).also { Log.e("Web", it!!) }
         homeUrlLive.observe(this, Observer {
             Log.e("web", "homeUrl Changed")
             initUi(it)
@@ -74,8 +75,8 @@ class WebViewActivity : AppCompatActivity() {
                 }
                 if(isEmptyHome(homeUrl).not())
                 {
+                    Log.e("web", "url load, $homeUrl")
                     loadUrl(homeUrl)
-                    Log.e("web", "url load")
                 }
             }
 
@@ -179,6 +180,9 @@ class WebViewActivity : AppCompatActivity() {
                     dlg.setCancelable(false)
                     dlg.show()
                 }
+            }
+            rlTabCount.setOnClickListener {
+                startActivity(Intent(this@WebViewActivity, TabActivity::class.java))
             }
         }
     }

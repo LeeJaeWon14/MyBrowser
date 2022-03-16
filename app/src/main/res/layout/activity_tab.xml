@@ -9,5 +9,13 @@
         android:id="@+id/rv_tab_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
+    <Button
+        android:id="@+id/btn_add_tab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:background="@drawable/ripple_unbound"
+        android:layout_alignParentBottom="true"
+        android:textColor="@color/black"
+        tools:text="추가" />
 </RelativeLayout>

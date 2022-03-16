@@ -18,18 +18,24 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
                 ivNext.isEnabled = it.canGoForward()
                 ivPrev.isEnabled = it.canGoBack()
             }
+            url?.let {
+//                if(it == "about:blank") {
+//                    val home = Pref.getInstance(view.context)?.getString(Pref.HOME)!!.also { homeUrl -> Log.e("web", homeUrl) }
+//                    view.loadUrl(home)
+//                }
+                binding.url.text = it
+                Log.e("Web", view.context?.getString(R.string.str_page_started) + ", $it")
+            }
         }
-        binding.url.text = url
-        Log.e("Web", view?.context?.getString(R.string.str_page_started) + ", $url")
     }
 
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
         Log.e("Web", view?.context?.getString(R.string.str_page_finished)!!)
-        if(checkCleartext) {
-            checkCleartext = false
-            view.clearHistory()
-        }
+//        if(checkCleartext) {
+//            checkCleartext = false
+//            view.clearHistory()
+//        }
     }
 
     override fun onReceivedError(

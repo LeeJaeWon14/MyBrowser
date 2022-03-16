@@ -1,4 +1,4 @@
-package com.example.mybrowser
+package com.example.mybrowser.view
 
 import android.os.Bundle
 import android.util.Log
@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import com.example.mybrowser.R
 import com.example.mybrowser.client.MyWebClient
 import com.example.mybrowser.databinding.ActivityWebViewBinding
 import com.example.mybrowser.databinding.DialogUrlSearchBinding
@@ -27,6 +28,7 @@ class WebViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWebViewBinding
     private lateinit var keyManager: InputMethodManager
     private val homeUrlLive: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    private val tabCount: MutableLiveData<String> by lazy { MutableLiveData<String>() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,8 +37,6 @@ class WebViewActivity : AppCompatActivity() {
 
         keyManager = getSystemService(InputMethodManager::class.java)
 
-
-//        initBeforeStartBrowser()
         homeUrlLive.value = Pref.getInstance(this)?.getString(Pref.HOME)
         homeUrlLive.observe(this, Observer {
             Log.e("web", "homeUrl Changed")
@@ -44,14 +44,20 @@ class WebViewActivity : AppCompatActivity() {
         })
     }
 
+    override fun onResume() {
+        super.onResume()
+        tabCount.value = Pref.getInstance(this@WebViewActivity)?.getString(Pref.TAB_COUNT)
+        tabCount.observe(this, Observer {
+            if(it.isEmpty())
+                binding.tvTabCount.text = 0.toString()
+            else
+                binding.tvTabCount.text = it
+        })
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
-    }
-
-    private fun initBeforeStartBrowser() {
-
-
     }
 
     private fun initUi(homeUrl: String) {

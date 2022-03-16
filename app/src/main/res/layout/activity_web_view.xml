@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".WebViewActivity"
+    tools:context=".view.WebViewActivity"
     android:orientation="vertical">
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -45,7 +45,8 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:maxLines="1"
-                                        android:gravity="center_vertical"
+                        android:gravity="center_vertical"
+                        android:textStyle="bold"
                         tools:text="url area"/>
                     <RelativeLayout
                         android:layout_width="wrap_content"

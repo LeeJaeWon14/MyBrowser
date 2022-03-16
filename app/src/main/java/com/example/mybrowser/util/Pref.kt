@@ -10,6 +10,7 @@ class Pref(private val context : Context) {
     companion object {
         const val HOME = "Web home"
         const val RESUME = "Page resume"
+        const val TAB_COUNT = "Tab count"
 
         private var instance : Pref? =null
         @Synchronized

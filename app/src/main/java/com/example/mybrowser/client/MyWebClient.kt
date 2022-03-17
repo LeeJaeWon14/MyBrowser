@@ -8,6 +8,11 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.example.mybrowser.R
 import com.example.mybrowser.databinding.ActivityWebViewBinding
+import com.example.mybrowser.model.MyRoomDatabase
+import com.example.mybrowser.model.TabEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient() {
     private var checkCleartext: Boolean = false
@@ -24,6 +29,13 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
 //                    view.loadUrl(home)
 //                }
                 binding.url.text = it
+//                CoroutineScope(Dispatchers.IO).launch {
+//                    MyRoomDatabase.getInstance(view.context).getTabDao()
+//                        .insertTabList(TabEntity(
+//                            0, url = it
+//                        ))
+//                }
+
                 Log.e("Web", view.context?.getString(R.string.str_page_started) + ", $it")
             }
         }
@@ -32,10 +44,17 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
         Log.e("Web", view?.context?.getString(R.string.str_page_finished)!!)
-//        if(checkCleartext) {
-//            checkCleartext = false
-//            view.clearHistory()
-//        }
+        url?.let {
+            CoroutineScope(Dispatchers.IO).launch {
+                val dao = MyRoomDatabase.getInstance(view.context).getTabDao()
+                val list = dao.distinctCheckTab(it)
+                if(list.isEmpty()) {
+                    dao.insertTabList(
+                        TabEntity(0, url = it)
+                    )
+                }
+            }
+        }
     }
 
     override fun onReceivedError(

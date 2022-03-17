@@ -8,7 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mybrowser.R
 import com.example.mybrowser.model.TabEntity
 
-class TabListAdapter(private val list: List<TabEntity>?) : RecyclerView.Adapter<TabListAdapter.TabListViewHolder>() {
+class TabListAdapter(private val _list: List<TabEntity>?) : RecyclerView.Adapter<TabListAdapter.TabListViewHolder>() {
+    private val tabList = _list?.toMutableList()
     class TabListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvSiteTitle: TextView = view.findViewById(R.id.tv_site_title)
     }
@@ -19,10 +20,12 @@ class TabListAdapter(private val list: List<TabEntity>?) : RecyclerView.Adapter<
     }
 
     override fun onBindViewHolder(holder: TabListViewHolder, position: Int) {
-        TODO("Not yet implemented")
+        holder.apply {
+            tvSiteTitle.text = tabList?.get(position)?.url
+        }
     }
 
     override fun getItemCount(): Int {
-        return list?.size ?: 0
+        return tabList?.size ?: 0
     }
 }

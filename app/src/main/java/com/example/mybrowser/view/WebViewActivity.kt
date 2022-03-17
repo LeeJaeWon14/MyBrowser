@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.webkit.WebSettings
+import android.webkit.WebView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -17,15 +18,13 @@ import com.example.mybrowser.R
 import com.example.mybrowser.client.MyWebClient
 import com.example.mybrowser.databinding.ActivityWebViewBinding
 import com.example.mybrowser.databinding.DialogUrlSearchBinding
+import com.example.mybrowser.model.MyRoomDatabase
 import com.example.mybrowser.util.Pref
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class WebViewActivity : AppCompatActivity() {
-    companion object {
-        const val BASE_URL = "https://velog.io/@jeep_chief_14"
-        const val NAVER = "https://www.naver.com"
-        const val TEST = "http://www.kyungmin.ac.kr"
-    }
-
     private lateinit var binding: ActivityWebViewBinding
     private lateinit var keyManager: InputMethodManager
     private val homeUrlLive: MutableLiveData<String> by lazy { MutableLiveData<String>() }
@@ -36,12 +35,28 @@ class WebViewActivity : AppCompatActivity() {
         binding = ActivityWebViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        keyManager = getSystemService(InputMethodManager::class.java)
+        intent.getBooleanExtra("newTab", false).also { isNewTab ->
+            when(isNewTab) {
+                true -> {
+                    Pref.getInstance(this)?.getString(Pref.HOME)?.let {
+                        initUi(it)
+                    }
+                }
+                false -> {
+                    Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
+                        initUi(it)
+                    }
+                }
+            }
+        }
 
-        homeUrlLive.value = Pref.getInstance(this)?.getString(Pref.HOME).also { Log.e("Web", it!!) }
+        keyManager = getSystemService(InputMethodManager::class.java)
+//        Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
+//            initUi(it)
+//        }
         homeUrlLive.observe(this, Observer {
             Log.e("web", "homeUrl Changed")
-            initUi(it)
+//            initUi(it)
         })
     }
 
@@ -50,7 +65,7 @@ class WebViewActivity : AppCompatActivity() {
         tabCount.value = Pref.getInstance(this@WebViewActivity)?.getString(Pref.TAB_COUNT)
         tabCount.observe(this, Observer {
             if(it.isEmpty())
-                binding.tvTabCount.text = 0.toString()
+                binding.tvTabCount.text = 1.toString()
             else
                 binding.tvTabCount.text = it
         })
@@ -61,7 +76,7 @@ class WebViewActivity : AppCompatActivity() {
         Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
     }
 
-    private fun initUi(homeUrl: String) {
+    private fun initUi(targetUrl: String) {
 //        window.statusBarColor = getColor(R.color.light_gray)
         binding.apply {
             wvWebView.apply {
@@ -73,10 +88,9 @@ class WebViewActivity : AppCompatActivity() {
                     cacheMode = WebSettings.LOAD_DEFAULT
                     textZoom = 95 // Set text size in WebView, Default is 100.
                 }
-                if(isEmptyHome(homeUrl).not())
+                if(isEmptyHome(targetUrl).not())
                 {
-                    Log.e("web", "url load, $homeUrl")
-                    loadUrl(homeUrl)
+                    loadUrl(wvWebView, targetUrl)
                 }
             }
 
@@ -87,15 +101,17 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
 
-            ivNext.setOnClickListener { wvWebView.goForward() }
-            ivPrev.setOnClickListener { wvWebView.goBack() }
+            ivNext.setOnClickListener { deleteUrlInRoom(targetUrl); wvWebView.goForward() }
+            ivPrev.setOnClickListener { deleteUrlInRoom(targetUrl); wvWebView.goBack() }
 
             ivHome.apply {
-                setOnClickListener { 
-                    if(homeUrl.isEmpty())
-                        Toast.makeText(this@WebViewActivity, getString(R.string.str_empty_home_url), Toast.LENGTH_SHORT).show()
-                    else
-                        wvWebView.loadUrl(homeUrl)
+                setOnClickListener {
+                    Pref.getInstance(this@WebViewActivity)?.getString(Pref.HOME)?.let {
+                        if(it.isEmpty())
+                            Toast.makeText(this@WebViewActivity, getString(R.string.str_empty_home_url), Toast.LENGTH_SHORT).show()
+                        else
+                            loadUrl(wvWebView, it)
+                    }
                 }
                 setOnLongClickListener {
                     val dlgBinding = DialogUrlSearchBinding.inflate(layoutInflater)
@@ -165,7 +181,7 @@ class WebViewActivity : AppCompatActivity() {
                                 when(actionId) {
                                     EditorInfo.IME_ACTION_SEARCH -> {
                                         val url = makeUrl(v.text.toString())
-                                        wvWebView.loadUrl(url)
+                                        loadUrl(wvWebView, url)
                                         Log.e("web", "search url is $url")
                                         keyManager.hideSoftInputFromWindow(currentFocus?.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
                                         dlg.dismiss()
@@ -204,6 +220,19 @@ class WebViewActivity : AppCompatActivity() {
                 "https://".plus(url)
         }
         return url
+    }
+
+    private fun loadUrl(view: WebView, newUrl: String) {
+        deleteUrlInRoom(newUrl)
+        view.loadUrl(newUrl)
+    }
+
+    private fun deleteUrlInRoom(targetUrl: String) {
+        // Delete now url in room before move new page.
+        CoroutineScope(Dispatchers.IO).launch {
+            MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                .deleteTab(targetUrl)
+        }
     }
 
     private var time : Long = 0

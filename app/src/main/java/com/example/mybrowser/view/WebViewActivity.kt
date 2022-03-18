@@ -34,29 +34,34 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWebViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        actionBar?.hide()
+        setSupportActionBar(binding.llWebBar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        intent.getBooleanExtra("newTab", false).also { isNewTab ->
+        intent.getStringExtra("changeTab")?.let {
+            Log.e("Web", "tab changed, url is $it")
+            initUi(it)
+        } ?: intent.getBooleanExtra("newTab", false).also { isNewTab ->
             when(isNewTab) {
                 true -> {
                     Pref.getInstance(this)?.getString(Pref.HOME)?.let {
+                        Log.e("Web", "home url is $it")
                         initUi(it)
                     }
                 }
                 false -> {
                     Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
+                        Log.e("Web", "resume url is $it")
                         initUi(it)
                     }
                 }
             }
         }
 
+
         keyManager = getSystemService(InputMethodManager::class.java)
-//        Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
-//            initUi(it)
-//        }
         homeUrlLive.observe(this, Observer {
             Log.e("web", "homeUrl Changed")
-//            initUi(it)
         })
     }
 
@@ -65,15 +70,20 @@ class WebViewActivity : AppCompatActivity() {
         tabCount.value = Pref.getInstance(this@WebViewActivity)?.getString(Pref.TAB_COUNT)
         tabCount.observe(this, Observer {
             if(it.isEmpty())
-                binding.tvTabCount.text = 1.toString()
+                binding.tvTabCount.text = 0.toString()
             else
                 binding.tvTabCount.text = it
         })
     }
 
+    override fun onPause() {
+        super.onPause()
+        Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
+//        Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
     }
 
     private fun initUi(targetUrl: String) {
@@ -88,7 +98,7 @@ class WebViewActivity : AppCompatActivity() {
                     cacheMode = WebSettings.LOAD_DEFAULT
                     textZoom = 95 // Set text size in WebView, Default is 100.
                 }
-                if(isEmptyHome(targetUrl).not())
+                if(isEmptyHome()?.not() == true)
                 {
                     loadUrl(wvWebView, targetUrl)
                 }
@@ -162,6 +172,10 @@ class WebViewActivity : AppCompatActivity() {
             url.apply {
                 text = wvWebView.url
                 setOnClickListener {
+                    Pref.getInstance(this@WebViewActivity)?.getString(Pref.HOME)?.let {
+                        if(it.isEmpty())
+                            Toast.makeText(this@WebViewActivity, getString(R.string.str_empty_home_url), Toast.LENGTH_SHORT).show()
+                    }
                     val dlgBinding = DialogUrlSearchBinding.inflate(layoutInflater)
                     val dlg = AlertDialog.Builder(this@WebViewActivity).create()
                     dlg.setView(dlgBinding.root)
@@ -203,13 +217,15 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun isEmptyHome(homeUrl: String) : Boolean {
-        Log.e("web", "$homeUrl")
-        binding.apply {
-            tvEmptyMsg.isVisible = homeUrl.isEmpty()
-            slWebLayout.isVisible = homeUrl.isEmpty().not()
+    private fun isEmptyHome() : Boolean? {
+        Pref.getInstance(this)?.getString(Pref.HOME)?.let {
+            binding.apply {
+                tvEmptyMsg.isVisible = it.isEmpty()
+                slWebLayout.isVisible = it.isEmpty().not()
+            }
+            return it.isEmpty()
         }
-        return homeUrl.isEmpty()
+        return null
     }
 
     private fun makeUrl(url: String) : String {
@@ -223,6 +239,9 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun loadUrl(view: WebView, newUrl: String) {
+        isEmptyHome()
+//        if(binding.tvTabCount.text.toString().toInt() < 1)
+//            tabCount.value += 1
         deleteUrlInRoom(newUrl)
         view.loadUrl(newUrl)
     }

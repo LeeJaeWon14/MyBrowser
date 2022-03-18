@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.mybrowser.R
 import com.example.mybrowser.adapter.TabListAdapter
 import com.example.mybrowser.databinding.ActivityTabBinding
 import com.example.mybrowser.model.MyRoomDatabase
@@ -22,8 +23,14 @@ class TabActivity : AppCompatActivity() {
         binding = ActivityTabBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        actionBar?.hide()
+        setSupportActionBar(binding.tbTabToolbar)
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
+            title = String.format(
+                getString(R.string.str_tab_count),
+                Pref.getInstance(this@TabActivity)?.getString(Pref.TAB_COUNT)
+            )
         }
 
         binding.apply {

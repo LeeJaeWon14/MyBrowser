@@ -1,5 +1,6 @@
 package com.example.mybrowser.adapter
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mybrowser.R
 import com.example.mybrowser.model.TabEntity
+import com.example.mybrowser.view.WebViewActivity
 
 class TabListAdapter(private val _list: List<TabEntity>?) : RecyclerView.Adapter<TabListAdapter.TabListViewHolder>() {
     private val tabList = _list?.toMutableList()
@@ -21,7 +23,14 @@ class TabListAdapter(private val _list: List<TabEntity>?) : RecyclerView.Adapter
 
     override fun onBindViewHolder(holder: TabListViewHolder, position: Int) {
         holder.apply {
-            tvSiteTitle.text = tabList?.get(position)?.url
+            tvSiteTitle.apply {
+                text = tabList?.get(position)?.url
+                setOnClickListener {
+                    holder.itemView.context.startActivity(Intent(holder.itemView.context, WebViewActivity::class.java).apply {
+                        putExtra("changeTab", (it as TextView).text)
+                    })
+                }
+            }
         }
     }
 

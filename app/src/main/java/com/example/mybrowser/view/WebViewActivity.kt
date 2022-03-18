@@ -34,9 +34,6 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityWebViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        actionBar?.hide()
-        setSupportActionBar(binding.llWebBar)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         intent.getStringExtra("changeTab")?.let {
             Log.e("Web", "tab changed, url is $it")

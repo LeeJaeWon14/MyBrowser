@@ -17,19 +17,21 @@ import kotlinx.coroutines.withContext
 
 class TabActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTabBinding
+    private var tabCount: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTabBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        tabCount = Pref.getInstance(this@TabActivity)?.getString(Pref.TAB_COUNT)!!
 
         actionBar?.hide()
         setSupportActionBar(binding.tbTabToolbar)
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             title = String.format(
-                getString(R.string.str_tab_count),
-                Pref.getInstance(this@TabActivity)?.getString(Pref.TAB_COUNT)
+                    getString(R.string.str_tab_count),
+                    this@TabActivity.tabCount
             )
         }
 
@@ -49,6 +51,7 @@ class TabActivity : AppCompatActivity() {
                 startActivity(Intent(this@TabActivity, WebViewActivity::class.java).apply {
                     putExtra("newTab", true)
                 })
+                Pref.getInstance(this@TabActivity)?.setValue(Pref.TAB_COUNT, this@TabActivity.tabCount + 1)
                 finish()
             }
         }

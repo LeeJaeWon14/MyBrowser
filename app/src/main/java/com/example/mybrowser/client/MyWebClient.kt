@@ -10,6 +10,7 @@ import com.example.mybrowser.R
 import com.example.mybrowser.databinding.ActivityWebViewBinding
 import com.example.mybrowser.model.MyRoomDatabase
 import com.example.mybrowser.model.TabEntity
+import com.example.mybrowser.util.Pref
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,17 +25,7 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
                 ivPrev.isEnabled = it.canGoBack()
             }
             url?.let {
-//                if(it == "about:blank") {
-//                    val home = Pref.getInstance(view.context)?.getString(Pref.HOME)!!.also { homeUrl -> Log.e("web", homeUrl) }
-//                    view.loadUrl(home)
-//                }
                 binding.url.text = it
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    MyRoomDatabase.getInstance(view.context).getTabDao()
-//                        .insertTabList(TabEntity(
-//                            0, url = it
-//                        ))
-//                }
 
                 Log.e("Web", view.context?.getString(R.string.str_page_started) + ", $it")
             }
@@ -53,6 +44,9 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
                         TabEntity(0, url = it)
                     )
                 }
+                dao.selectTabList().also {
+                    Pref.getInstance(view.context)?.setValue(Pref.TAB_COUNT, it.size.toString())
+                }
             }
         }
     }
@@ -68,14 +62,13 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
             when(error?.description) {
                 it.context.getString(R.string.str_err_cleartext) -> {
                     it.loadUrl(request?.url.toString().replace("http", "https"))
-                    checkCleartext = true
+//                    checkCleartext = true
+                }
+                else -> {
+                    it.loadUrl("file://android_asset//error.html")
                 }
             }
         }
-
-//        when(error?.errorCode) {
-//
-//        }
     }
 
 //    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {

@@ -57,30 +57,17 @@ class WebViewActivity : AppCompatActivity() {
 
 
         keyManager = getSystemService(InputMethodManager::class.java)
-        homeUrlLive.observe(this, Observer {
-            Log.e("web", "homeUrl Changed")
-        })
+        observeData()
     }
 
     override fun onResume() {
         super.onResume()
         tabCount.value = Pref.getInstance(this@WebViewActivity)?.getString(Pref.TAB_COUNT)
-        tabCount.observe(this, Observer {
-            if(it.isEmpty())
-                binding.tvTabCount.text = 0.toString()
-            else
-                binding.tvTabCount.text = it
-        })
     }
 
     override fun onPause() {
         super.onPause()
         Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-//        Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
     }
 
     private fun initUi(targetUrl: String) {
@@ -98,6 +85,10 @@ class WebViewActivity : AppCompatActivity() {
                 if(isEmptyHome()?.not() == true)
                 {
                     loadUrl(wvWebView, targetUrl)
+                }
+
+                setOnScrollChangeListener { view, i, i2, i3, i4 ->
+
                 }
             }
 
@@ -212,6 +203,18 @@ class WebViewActivity : AppCompatActivity() {
                 startActivity(Intent(this@WebViewActivity, TabActivity::class.java))
             }
         }
+    }
+
+    private fun observeData() {
+        tabCount.observe(this, Observer {
+            if(it.isEmpty())
+                binding.tvTabCount.text = 0.toString()
+            else
+                binding.tvTabCount.text = it
+        })
+        homeUrlLive.observe(this, Observer {
+            Log.e("web", "homeUrl Changed")
+        })
     }
 
     private fun isEmptyHome() : Boolean? {

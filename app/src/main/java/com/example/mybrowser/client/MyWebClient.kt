@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient() {
-    private var checkCleartext: Boolean = false
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         view?.let {
@@ -46,6 +45,7 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
                 }
                 dao.selectTabList().also {
                     Pref.getInstance(view.context)?.setValue(Pref.TAB_COUNT, it.size.toString())
+                    binding.tvTabCount.text = it.size.toString()
                 }
             }
         }

@@ -44,14 +44,14 @@ class TabActivity : AppCompatActivity() {
                         layoutManager = LinearLayoutManager(this@TabActivity)
                         adapter = TabListAdapter(list)
                     }
-                    Pref.getInstance(this@TabActivity)?.setValue(Pref.TAB_COUNT, list.size.toString())
+//                    Pref.getInstance(this@TabActivity)?.setValue(Pref.TAB_COUNT, list.size.toString())
                 }
             }
             btnAddTab.setOnClickListener {
                 startActivity(Intent(this@TabActivity, WebViewActivity::class.java).apply {
                     putExtra("newTab", true)
                 })
-                Pref.getInstance(this@TabActivity)?.setValue(Pref.TAB_COUNT, this@TabActivity.tabCount + 1)
+//                Pref.getInstance(this@TabActivity)?.setValue(Pref.TAB_COUNT, this@TabActivity.tabCount + 1)
                 finish()
             }
         }

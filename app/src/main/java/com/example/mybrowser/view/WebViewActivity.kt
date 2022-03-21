@@ -242,7 +242,7 @@ class WebViewActivity : AppCompatActivity() {
         isEmptyHome()
 //        if(binding.tvTabCount.text.toString().toInt() < 1)
 //            tabCount.value += 1
-        deleteUrlInRoom(newUrl)
+        deleteUrlInRoom(view.url.toString())
         view.loadUrl(newUrl)
     }
 

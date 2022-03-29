@@ -4,16 +4,19 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mybrowser.R
 import com.example.mybrowser.model.TabEntity
+import com.example.mybrowser.util.Pref
 import com.example.mybrowser.view.WebViewActivity
 
-class TabListAdapter(private val _list: List<TabEntity>?) : RecyclerView.Adapter<TabListAdapter.TabListViewHolder>() {
+class TabListAdapter(_list: List<TabEntity>?) : RecyclerView.Adapter<TabListAdapter.TabListViewHolder>() {
     private val tabList = _list?.toMutableList()
     class TabListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvSiteTitle: TextView = view.findViewById(R.id.tv_site_title)
+        val llTab: LinearLayout = view.findViewById(R.id.ll_tab)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabListViewHolder {
@@ -30,6 +33,10 @@ class TabListAdapter(private val _list: List<TabEntity>?) : RecyclerView.Adapter
                         putExtra("changeTab", (it as TextView).text)
                     })
                 }
+            }
+            // if now tab is current tab, that background is changed highlighting border.
+            if(Pref.getInstance(itemView.context)?.getString(Pref.RESUME) == tabList?.get(position)?.url) {
+                llTab.setBackgroundResource(R.drawable.ripple_now_tab)
             }
         }
     }

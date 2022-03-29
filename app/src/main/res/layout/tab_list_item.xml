@@ -9,7 +9,8 @@
     android:padding="5dp"
     android:layout_marginTop="10dp"
     android:layout_marginStart="10dp"
-    android:layout_marginEnd="10dp">
+    android:layout_marginEnd="10dp"
+    android:id="@+id/ll_tab">
     <TextView
         android:id="@+id/tv_site_title"
         android:layout_width="match_parent"

@@ -14,6 +14,7 @@ import com.example.mybrowser.util.Pref
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient() {
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -26,7 +27,7 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
             url?.let {
                 binding.url.text = it
 
-                Log.e("Web", view.context?.getString(R.string.str_page_started) + ", $it")
+                Log.e("Web", String.format(view.context?.getString(R.string.str_page_started)!!, it))
             }
         }
     }
@@ -61,8 +62,14 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
         view?.let {
             when(error?.description) {
                 it.context.getString(R.string.str_err_cleartext) -> {
-                    it.loadUrl(request?.url.toString().replace("http", "https"))
-//                    checkCleartext = true
+                    // It have insert working twice... will find other way..
+                    CoroutineScope(Dispatchers.IO).launch {
+                        MyRoomDatabase.getInstance(it.context).getTabDao()
+                                .deleteTab(it.url!!)
+                        withContext(Dispatchers.Main) {
+                            it.loadUrl(request?.url.toString().replace("http", "https"))
+                        }
+                    }
                 }
                 else -> {
                     it.loadUrl("file://android_asset//error.html")

@@ -21,4 +21,7 @@ interface TabDAO {
 
     @Query("SELECT * FROM TabEntity WHERE url = :url")
     fun distinctCheckTab(url: String) : List<TabEntity>
+
+    @Query("SELECT id FROM TabEntity WHERE url = :url")
+    fun selectUrlId(url: String) : Int
 }

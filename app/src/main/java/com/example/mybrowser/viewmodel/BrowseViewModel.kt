@@ -1,7 +1,9 @@
 package com.example.mybrowser.viewmodel
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class BrowseViewModel : ViewModel() {
-    var tabCount: Int = 0
+    val homeUrlLive: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    val tabCount: MutableLiveData<Int> by lazy { MutableLiveData<Int>() }
 }

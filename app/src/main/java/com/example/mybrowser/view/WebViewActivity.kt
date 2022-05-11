@@ -9,6 +9,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -20,15 +21,16 @@ import com.example.mybrowser.databinding.ActivityWebViewBinding
 import com.example.mybrowser.databinding.DialogUrlSearchBinding
 import com.example.mybrowser.model.MyRoomDatabase
 import com.example.mybrowser.util.Pref
+import com.example.mybrowser.viewmodel.BrowseViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWebViewBinding
     private lateinit var keyManager: InputMethodManager
-    private val homeUrlLive: MutableLiveData<String> by lazy { MutableLiveData<String>() }
-    private val tabCount: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    private val viewModel: BrowseViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +64,12 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        tabCount.value = Pref.getInstance(this@WebViewActivity)?.getString(Pref.TAB_COUNT)
+        Pref.getInstance(this@WebViewActivity)?.getString(Pref.TAB_COUNT)?.let {
+            if(it == "")
+                viewModel.tabCount.value = 0
+            else
+                viewModel.tabCount.value = it.toInt()
+        }
     }
 
     override fun onPause() {
@@ -71,16 +78,15 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun initUi(targetUrl: String) {
-//        window.statusBarColor = getColor(R.color.light_gray)
         binding.apply {
             wvWebView.apply {
-                webViewClient = MyWebClient(binding)
+                webViewClient = MyWebClient(binding, getUrlId(targetUrl))
                 settings.apply {
                     javaScriptEnabled = true
                     loadWithOverviewMode = true
                     useWideViewPort = true
                     cacheMode = WebSettings.LOAD_DEFAULT
-                    textZoom = 95 // Set text size in WebView, Default is 100.
+                    textZoom = 95 // Set text size of WebView, Default is 100.
                 }
                 if(isEmptyHome()?.not() == true)
                 {
@@ -132,7 +138,7 @@ class WebViewActivity : AppCompatActivity() {
                                                 "저장되었습니다.",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            homeUrlLive.postValue(makeUrl(v.text.toString()))
+                                            viewModel.homeUrlLive.postValue(makeUrl(v.text.toString()))
                                             keyManager.hideSoftInputFromWindow(currentFocus?.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
                                             dlg.dismiss()
                                         }
@@ -206,15 +212,14 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun observeData() {
-        tabCount.observe(this, Observer {
-            if(it.isEmpty())
-                binding.tvTabCount.text = 0.toString()
-            else
-                binding.tvTabCount.text = it
-        })
-        homeUrlLive.observe(this, Observer {
-            Log.e("web", "homeUrl Changed")
-        })
+        viewModel.apply {
+            tabCount.observe(this@WebViewActivity, Observer {
+                binding.tvTabCount.text = it.toString()
+            })
+            homeUrlLive.observe(this@WebViewActivity, Observer {
+                Log.e("web", "homeUrl Changed")
+            })
+        }
     }
 
     private fun isEmptyHome() : Boolean? {
@@ -250,6 +255,16 @@ class WebViewActivity : AppCompatActivity() {
             MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
                 .deleteTab(targetUrl)
         }
+    }
+
+    private fun getUrlId(url: String) : Int? {
+        var id: Int? = null
+        CoroutineScope(Dispatchers.IO).launch {
+            id = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                .selectUrlId(url)
+        }
+        Log.e("Web", "id is $id")
+        return id
     }
 
     private var time : Long = 0

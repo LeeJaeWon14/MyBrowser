@@ -49,6 +49,7 @@ class TabActivity : AppCompatActivity() {
             btnAddTab.setOnClickListener {
                 startActivity(Intent(this@TabActivity, WebViewActivity::class.java).apply {
                     putExtra("newTab", true)
+                    Pref.getInstance(this@TabActivity)?.setValue(Pref.TAB_COUNT, "")
                 })
                 finish()
             }

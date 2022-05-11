@@ -16,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient() {
+class MyWebClient(private val binding: ActivityWebViewBinding, private val id: Int?) : WebViewClient() {
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         view?.let {
@@ -37,16 +37,22 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
         Log.e("Web", view?.context?.getString(R.string.str_page_finished)!!)
         url?.let {
             CoroutineScope(Dispatchers.IO).launch {
-                val dao = MyRoomDatabase.getInstance(view.context).getTabDao()
-                val list = dao.distinctCheckTab(it)
-                if(list.isEmpty()) {
-                    dao.insertTabList(
-                        TabEntity(0, url = it)
-                    )
-                }
-                dao.selectTabList().also {
-                    Pref.getInstance(view.context)?.setValue(Pref.TAB_COUNT, it.size.toString())
-                    binding.tvTabCount.text = it.size.toString()
+                MyRoomDatabase.getInstance(view.context).getTabDao().run {
+                    id?.let {
+                        // already have url
+                        // will adding update at room
+                        /* no-op */
+                    } ?: run {
+                        // new url
+                        Log.e("Web", "new Url! will adding on room")
+                        insertTabList(
+                            TabEntity(0, url = it)
+                        )
+                        selectTabList().also {
+                            Pref.getInstance(view.context)?.setValue(Pref.TAB_COUNT, it.size.toString())
+                            withContext(Dispatchers.Main) { binding.tvTabCount.text = it.size.toString() }
+                        }
+                    }
                 }
             }
         }
@@ -63,13 +69,14 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
             when(error?.description) {
                 it.context.getString(R.string.str_err_cleartext) -> {
                     // It have insert working twice... will find other way..
-                    CoroutineScope(Dispatchers.IO).launch {
-                        MyRoomDatabase.getInstance(it.context).getTabDao()
-                                .deleteTab(it.url!!)
-                        withContext(Dispatchers.Main) {
-                            it.loadUrl(request?.url.toString().replace("http", "https"))
-                        }
-                    }
+//                    CoroutineScope(Dispatchers.IO).launch {
+//                        MyRoomDatabase.getInstance(it.context).getTabDao()
+//                                .deleteTab(it.url!!)
+//                        withContext(Dispatchers.Main) {
+//                            it.loadUrl(request?.url.toString().replace("http", "https"))
+//                        }
+//                    }
+                    it.loadUrl(request?.url.toString().replace("http", "https"))
                 }
                 else -> {
                     it.loadUrl("file://android_asset//error.html")

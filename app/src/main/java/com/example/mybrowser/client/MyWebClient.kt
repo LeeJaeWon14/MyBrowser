@@ -1,7 +1,7 @@
 package com.example.mybrowser.client
 
 import android.graphics.Bitmap
-import android.util.Log
+import com.example.mybrowser.util.Log
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -27,35 +27,37 @@ class MyWebClient(private val binding: ActivityWebViewBinding, private val id: I
             url?.let {
                 binding.url.text = it
 
-                Log.e("Web", String.format(view.context?.getString(R.string.str_page_started)!!, it))
+                Log.e(String.format(view.context?.getString(R.string.str_page_started)!!, it))
             }
         }
     }
 
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        Log.e("Web", view?.context?.getString(R.string.str_page_finished)!!)
-        url?.let {
-            CoroutineScope(Dispatchers.IO).launch {
-                MyRoomDatabase.getInstance(view.context).getTabDao().run {
-                    id?.let {
-                        // already have url
-                        // will adding update at room
-                        /* no-op */
-                    } ?: run {
-                        // new url
-                        Log.e("Web", "new Url! will adding on room")
-                        insertTabList(
-                            TabEntity(0, url = it)
-                        )
-                        selectTabList().also {
-                            Pref.getInstance(view.context)?.setValue(Pref.TAB_COUNT, it.size.toString())
-                            withContext(Dispatchers.Main) { binding.tvTabCount.text = it.size.toString() }
-                        }
-                    }
-                }
-            }
-        }
+        Log.e(view?.context?.getString(R.string.str_page_finished)!!)
+//        url?.let {
+//            if(it == "about:blank") return@let
+//            CoroutineScope(Dispatchers.IO).launch {
+//                MyRoomDatabase.getInstance(view.context).getTabDao().run {
+//                    id?.let {
+//                        // already have url
+//                        // will adding update at room
+//                        /* no-op */
+//                    } ?: run {
+//                        // new url
+//                        Log.e("new Url! will adding on room")
+//                        insertTabList(
+//                            TabEntity(0, url = it)
+//                        )
+//                        selectTabList().also {
+//                            Log.e("tab count is ${it.size}")
+//                            Pref.getInstance(view.context)?.setValue(Pref.TAB_COUNT, it.size.toString())
+//                            withContext(Dispatchers.Main) { binding.tvTabCount.text = it.size.toString() }
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     override fun onReceivedError(
@@ -64,18 +66,10 @@ class MyWebClient(private val binding: ActivityWebViewBinding, private val id: I
         error: WebResourceError?
     ) {
         super.onReceivedError(view, request, error)
-        Log.e("Web", "Got Error, code is ${error?.description} and ${error?.errorCode}! request is ${request?.requestHeaders}")
+        Log.e("Got Error, code is ${error?.description} and ${error?.errorCode}! request is ${request?.requestHeaders}")
         view?.let {
             when(error?.description) {
                 it.context.getString(R.string.str_err_cleartext) -> {
-                    // It have insert working twice... will find other way..
-//                    CoroutineScope(Dispatchers.IO).launch {
-//                        MyRoomDatabase.getInstance(it.context).getTabDao()
-//                                .deleteTab(it.url!!)
-//                        withContext(Dispatchers.Main) {
-//                            it.loadUrl(request?.url.toString().replace("http", "https"))
-//                        }
-//                    }
                     it.loadUrl(request?.url.toString().replace("http", "https"))
                 }
                 else -> {
@@ -84,14 +78,4 @@ class MyWebClient(private val binding: ActivityWebViewBinding, private val id: I
             }
         }
     }
-
-//    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-//        Log.e("web", "receive url ~~~ ${request?.url.toString()}")
-//        view?.let {
-//            if(request?.url.toString().contains("https").not()) {
-//                it.loadUrl(request?.url.toString().replace("http", "https"))
-//            }
-//        }
-//        return false
-//    }
 }

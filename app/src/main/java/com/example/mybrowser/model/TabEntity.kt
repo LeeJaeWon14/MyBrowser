@@ -13,5 +13,5 @@ data class TabEntity(
         val title: String = "test",
 
         @ColumnInfo
-        val url: String
+        val url: String,
 )

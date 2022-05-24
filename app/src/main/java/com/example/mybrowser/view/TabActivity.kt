@@ -3,6 +3,7 @@ package com.example.mybrowser.view
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.mybrowser.R
@@ -47,11 +48,8 @@ class TabActivity : AppCompatActivity() {
                 }
             }
             btnAddTab.setOnClickListener {
-                startActivity(Intent(this@TabActivity, WebViewActivity::class.java).apply {
-                    putExtra("newTab", true)
-                    Pref.getInstance(this@TabActivity)?.setValue(Pref.TAB_COUNT, "")
-                })
-                finish()
+                //todo: not implemented yet.
+                Toast.makeText(this@TabActivity, getString(R.string.str_not_impl_yet), Toast.LENGTH_SHORT).show()
             }
         }
     }

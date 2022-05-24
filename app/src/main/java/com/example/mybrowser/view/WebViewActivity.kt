@@ -2,11 +2,12 @@ package com.example.mybrowser.view
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import com.example.mybrowser.util.Log
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -20,12 +21,10 @@ import com.example.mybrowser.client.MyWebClient
 import com.example.mybrowser.databinding.ActivityWebViewBinding
 import com.example.mybrowser.databinding.DialogUrlSearchBinding
 import com.example.mybrowser.model.MyRoomDatabase
+import com.example.mybrowser.model.TabEntity
 import com.example.mybrowser.util.Pref
 import com.example.mybrowser.viewmodel.BrowseViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWebViewBinding
@@ -38,24 +37,26 @@ class WebViewActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         intent.getStringExtra("changeTab")?.let {
-            Log.e("Web", "tab changed, url is $it")
+            Log.e("tab changed, url is $it")
             initUi(it)
         } ?: intent.getBooleanExtra("newTab", false).also { isNewTab ->
             when(isNewTab) {
                 true -> {
                     Pref.getInstance(this)?.getString(Pref.HOME)?.let {
-                        Log.e("Web", "home url is $it")
+                        Log.e("home url is $it")
                         initUi(it)
                     }
                 }
                 false -> {
                     Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
-                        Log.e("Web", "resume url is $it")
+                        Log.e("resume url is $it")
                         initUi(it)
                     }
                 }
             }
         }
+
+
 
 
         keyManager = getSystemService(InputMethodManager::class.java)
@@ -75,6 +76,7 @@ class WebViewActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
+        Log.e("resume url is ${Pref.getInstance(this)?.getString(Pref.RESUME)} on onPause")
     }
 
     private fun initUi(targetUrl: String) {
@@ -105,9 +107,59 @@ class WebViewActivity : AppCompatActivity() {
                 }
             }
 
-            ivNext.setOnClickListener { deleteUrlInRoom(targetUrl); wvWebView.goForward() }
-            ivPrev.setOnClickListener { deleteUrlInRoom(targetUrl); wvWebView.goBack() }
-
+            ivNext.apply {
+                isEnabled = false
+                setOnClickListener { wvWebView.goForward() }
+            }
+            ivPrev.apply {
+                isEnabled = false
+                setOnClickListener { wvWebView.goBack() }
+            }
+            ivBookmark.apply {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val list = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                        .selectTabList()
+                    list.forEach { entity ->
+                        if(entity.url == targetUrl)
+                            setImageResource(R.drawable.ic_baseline_star_24)
+                    }
+                }
+                setOnClickListener {
+                    if(targetUrl == "") return@setOnClickListener
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val list = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                            .distinctCheckTab(targetUrl)
+                        withContext(Dispatchers.Main) {
+                            (it as ImageView).apply {
+                                if(list.isEmpty()) {
+                                    setImageResource(R.drawable.ic_baseline_star_24)
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                            .insertTabList(TabEntity(
+                                                0, "", targetUrl
+                                            ))
+                                        viewModel.tabCount.postValue(
+                                            MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                                .selectTabList().size
+                                        )
+                                    }
+                                }
+                                else {
+                                    setImageResource(R.drawable.ic_baseline_star_border_24)
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                            .deleteTab(targetUrl)
+                                        viewModel.tabCount.postValue(
+                                            MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                                .selectTabList().size
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             ivHome.apply {
                 setOnClickListener {
                     Pref.getInstance(this@WebViewActivity)?.getString(Pref.HOME)?.let {
@@ -190,7 +242,7 @@ class WebViewActivity : AppCompatActivity() {
                                     EditorInfo.IME_ACTION_SEARCH -> {
                                         val url = makeUrl(v.text.toString())
                                         loadUrl(wvWebView, url)
-                                        Log.e("web", "search url is $url")
+                                        Log.e("search url is $url")
                                         keyManager.hideSoftInputFromWindow(currentFocus?.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
                                         dlg.dismiss()
                                     }
@@ -217,7 +269,7 @@ class WebViewActivity : AppCompatActivity() {
                 binding.tvTabCount.text = it.toString()
             })
             homeUrlLive.observe(this@WebViewActivity, Observer {
-                Log.e("web", "homeUrl Changed")
+                Log.e("homeUrl Changed")
             })
         }
     }
@@ -245,16 +297,7 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun loadUrl(view: WebView, newUrl: String) {
         isEmptyHome()
-        deleteUrlInRoom(view.url.toString())
         view.loadUrl(newUrl)
-    }
-
-    private fun deleteUrlInRoom(targetUrl: String) {
-        // Delete now url in room before move new page.
-        CoroutineScope(Dispatchers.IO).launch {
-            MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                .deleteTab(targetUrl)
-        }
     }
 
     private fun getUrlId(url: String) : Int? {
@@ -263,7 +306,7 @@ class WebViewActivity : AppCompatActivity() {
             id = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
                 .selectUrlId(url)
         }
-        Log.e("Web", "id is $id")
+        Log.e("id is $id")
         return id
     }
 

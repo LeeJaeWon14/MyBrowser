@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [TabEntity::class], version = 1, exportSchema = false)
+@Database(entities = [TabEntity::class], version = 3, exportSchema = false)
 abstract class MyRoomDatabase : RoomDatabase(){
     abstract fun getTabDao() : TabDAO
 
@@ -21,7 +21,7 @@ abstract class MyRoomDatabase : RoomDatabase(){
                     context.applicationContext,
                     MyRoomDatabase::class.java,
                 "tabRoom.db"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
                 return instance!!
             }
         }

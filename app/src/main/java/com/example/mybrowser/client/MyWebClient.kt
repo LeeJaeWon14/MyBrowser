@@ -6,6 +6,7 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import com.example.mybrowser.R
 import com.example.mybrowser.databinding.ActivityWebViewBinding
 import com.example.mybrowser.model.MyRoomDatabase
@@ -78,14 +79,15 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
         error: WebResourceError?
     ) {
         super.onReceivedError(view, request, error)
-        Log.e("Got Error, code is ${error?.description} and ${error?.errorCode}! request is ${request?.requestHeaders}")
         view?.let {
             when(error?.description) {
                 it.context.getString(R.string.str_err_cleartext) -> {
                     it.loadUrl(request?.url.toString().replace("http", "https"))
                 }
                 else -> {
-                    it.loadUrl("file://android_asset//error.html")
+                    Log.e("Got Error, code is ${error?.description} and ${error?.errorCode}! request is ${request?.requestHeaders}")
+//                    it.loadUrl("file://android_asset//error.html")
+                    Toast.makeText(it.context, it.context.getString(R.string.str_unknown_error), Toast.LENGTH_SHORT).show()
                 }
             }
         }

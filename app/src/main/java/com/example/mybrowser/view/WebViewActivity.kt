@@ -14,6 +14,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.example.mybrowser.R
@@ -38,24 +39,13 @@ class WebViewActivity : AppCompatActivity() {
 
         intent.getStringExtra("changeTab")?.let {
             Log.e("tab changed, url is $it")
-            initUi(it)
+            viewModel.url.value = it
+            initUi()
         } ?: Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
             Log.e("resume url is $it")
-            initUi(it)
+            viewModel.url.value = it
+            initUi()
         }
-//        intent.getBooleanExtra("newTab", false).also { isNewTab ->
-//            when(isNewTab) {
-//                true -> {
-//                    Pref.getInstance(this)?.getString(Pref.HOME)?.let {
-//                        Log.e("home url is $it")
-//                        initUi(it)
-//                    }
-//                }
-//                false -> {
-//
-//                }
-//            }
-//        }
 
         keyManager = getSystemService(InputMethodManager::class.java)
         observeData()
@@ -64,7 +54,8 @@ class WebViewActivity : AppCompatActivity() {
         if(intent?.action == Intent.ACTION_SEND) {
             when(intent.type) {
                 "text/plain" -> {
-                    initUi(intent.getStringExtra(Intent.EXTRA_TEXT).toString())
+                    viewModel.url.value = intent.getStringExtra(Intent.EXTRA_TEXT).toString()
+                    initUi()
                 }
             }
         }
@@ -88,7 +79,7 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun initUi(targetUrl: String) {
+    private fun initUi() {
         binding.apply {
             wvWebView.apply {
                 webViewClient = MyWebClient(binding)
@@ -101,7 +92,7 @@ class WebViewActivity : AppCompatActivity() {
                 }
                 if(isEmptyHome()?.not() == true)
                 {
-                    loadUrl(wvWebView, targetUrl)
+                    loadUrl(wvWebView, viewModel.url.value!!)
                 }
 
                 setOnScrollChangeListener { view, i, i2, i3, i4 ->
@@ -125,45 +116,35 @@ class WebViewActivity : AppCompatActivity() {
                 setOnClickListener { wvWebView.goBack() }
             }
             ivBookmark.apply {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val list = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                        .selectTabList()
-                    list.forEach { entity ->
-                        if(entity.url == targetUrl)
-                            setImageResource(R.drawable.ic_baseline_star_24)
-                    }
-                }
                 setOnClickListener {
-                    if(targetUrl == "") return@setOnClickListener
+                    if(viewModel.url.value!! == "") return@setOnClickListener
                     CoroutineScope(Dispatchers.IO).launch {
                         val list = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                            .distinctCheckTab(targetUrl)
-                        withContext(Dispatchers.Main) {
-                            (it as ImageView).apply {
-                                if(list.isEmpty()) {
+                            .distinctCheckTab(viewModel.url.value!!)
+                        (it as ImageView).apply {
+                            if(list.isEmpty()) {
+                                withContext(Dispatchers.Main) {
                                     setImageResource(R.drawable.ic_baseline_star_24)
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                                            .insertTabList(TabEntity(
-                                                0, "", targetUrl
-                                            ))
-                                        viewModel.tabCount.postValue(
-                                            MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                                                .selectTabList().size
-                                        )
-                                    }
                                 }
-                                else {
+                                MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                    .insertTabList(TabEntity(
+                                        0, "", viewModel.url.value!!
+                                    ))
+                                viewModel.tabCount.postValue(
+                                    MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                        .selectTabList().size
+                                )
+                            }
+                            else {
+                                withContext(Dispatchers.Main) {
                                     setImageResource(R.drawable.ic_baseline_star_border_24)
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                                            .deleteTab(targetUrl)
-                                        viewModel.tabCount.postValue(
-                                            MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                                                .selectTabList().size
-                                        )
-                                    }
                                 }
+                                MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                    .deleteTab(viewModel.url.value!!)
+                                viewModel.tabCount.postValue(
+                                    MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+                                        .selectTabList().size
+                                )
                             }
                         }
                     }
@@ -267,6 +248,10 @@ class WebViewActivity : AppCompatActivity() {
                     dlg.setCancelable(false)
                     dlg.show()
                 }
+                addTextChangedListener {
+                    Log.e("changed url is $it")
+                    viewModel.url.value = it.toString()
+                }
             }
             rlTabCount.setOnClickListener {
                 startActivity(Intent(this@WebViewActivity, TabActivity::class.java))
@@ -310,16 +295,6 @@ class WebViewActivity : AppCompatActivity() {
         isEmptyHome()
         view.loadUrl(newUrl)
     }
-
-//    private fun getUrlId(url: String) : Int? {
-//        var id: Int? = null
-//        CoroutineScope(Dispatchers.IO).launch {
-//            id = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-//                .selectUrlId(url)
-//        }
-//        Log.e("id is $id")
-//        return id
-//    }
 
     private var time : Long = 0
     override fun onBackPressed() {

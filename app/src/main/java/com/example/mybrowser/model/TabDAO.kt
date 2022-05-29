@@ -7,12 +7,6 @@ interface TabDAO {
     @Query("SELECT * FROM TabEntity")
     fun selectTabList() : List<TabEntity>
 
-    @Update
-    fun updateTabList(entity: TabEntity)
-
-    @Delete
-    fun deleteTabList(entity: TabEntity)
-
     @Query("DELETE FROM TabEntity WHERE url = :url")
     fun deleteTab(url: String)
 
@@ -21,7 +15,4 @@ interface TabDAO {
 
     @Query("SELECT * FROM TabEntity WHERE url = :url")
     fun distinctCheckTab(url: String) : List<TabEntity>
-
-    @Query("SELECT id FROM TabEntity WHERE url = :url")
-    fun selectUrlId(url: String) : Int
 }

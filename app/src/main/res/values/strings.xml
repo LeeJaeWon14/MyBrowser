@@ -6,7 +6,7 @@
     <string name="str_page_started">page started, %s</string>
     <string name="str_page_finished">page finished</string>
     <string name="str_unknown_error">알수없는 에러가 발생하였습니다.</string>
-    <string name="str_empty_msg">좌측 상단 버튼을 길게 눌러서\n홈페이지를 먼저 설정해주세요</string>
+    <string name="str_empty_msg">하단 홈 버튼을 길게 눌러서\n홈페이지를 먼저 설정해주세요</string>
     <string name="str_empty_home_url">홈페이지를 먼저 설정해주세요</string>
     <string name="str_add_tab_label">추가</string>
     <string name="str_tab_count">북마크 탭 %s개</string>

@@ -39,28 +39,35 @@ class WebViewActivity : AppCompatActivity() {
         intent.getStringExtra("changeTab")?.let {
             Log.e("tab changed, url is $it")
             initUi(it)
-        } ?: intent.getBooleanExtra("newTab", false).also { isNewTab ->
-            when(isNewTab) {
-                true -> {
-                    Pref.getInstance(this)?.getString(Pref.HOME)?.let {
-                        Log.e("home url is $it")
-                        initUi(it)
-                    }
-                }
-                false -> {
-                    Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
-                        Log.e("resume url is $it")
-                        initUi(it)
-                    }
-                }
-            }
+        } ?: Pref.getInstance(this)?.getString(Pref.RESUME)?.let {
+            Log.e("resume url is $it")
+            initUi(it)
         }
-
-
-
+//        intent.getBooleanExtra("newTab", false).also { isNewTab ->
+//            when(isNewTab) {
+//                true -> {
+//                    Pref.getInstance(this)?.getString(Pref.HOME)?.let {
+//                        Log.e("home url is $it")
+//                        initUi(it)
+//                    }
+//                }
+//                false -> {
+//
+//                }
+//            }
+//        }
 
         keyManager = getSystemService(InputMethodManager::class.java)
         observeData()
+
+        // Handled method for share action
+        if(intent?.action == Intent.ACTION_SEND) {
+            when(intent.type) {
+                "text/plain" -> {
+                    initUi(intent.getStringExtra(Intent.EXTRA_TEXT).toString())
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -75,14 +82,16 @@ class WebViewActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        Pref.getInstance(this)?.setValue(Pref.RESUME, binding.wvWebView.url.toString())
-        Log.e("resume url is ${Pref.getInstance(this)?.getString(Pref.RESUME)} on onPause")
+        Pref.getInstance(this)?.run {
+            setValue(Pref.RESUME, binding.wvWebView.url.toString())
+            setValue(Pref.TAB_COUNT, binding.tvTabCount.text.toString())
+        }
     }
 
     private fun initUi(targetUrl: String) {
         binding.apply {
             wvWebView.apply {
-                webViewClient = MyWebClient(binding, getUrlId(targetUrl))
+                webViewClient = MyWebClient(binding)
                 settings.apply {
                     javaScriptEnabled = true
                     loadWithOverviewMode = true
@@ -219,8 +228,10 @@ class WebViewActivity : AppCompatActivity() {
                 text = wvWebView.url
                 setOnClickListener {
                     Pref.getInstance(this@WebViewActivity)?.getString(Pref.HOME)?.let {
-                        if(it.isEmpty())
+                        if(it.isEmpty()) {
                             Toast.makeText(this@WebViewActivity, getString(R.string.str_empty_home_url), Toast.LENGTH_SHORT).show()
+                            return@setOnClickListener
+                        }
                     }
                     val dlgBinding = DialogUrlSearchBinding.inflate(layoutInflater)
                     val dlg = AlertDialog.Builder(this@WebViewActivity).create()
@@ -300,15 +311,15 @@ class WebViewActivity : AppCompatActivity() {
         view.loadUrl(newUrl)
     }
 
-    private fun getUrlId(url: String) : Int? {
-        var id: Int? = null
-        CoroutineScope(Dispatchers.IO).launch {
-            id = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
-                .selectUrlId(url)
-        }
-        Log.e("id is $id")
-        return id
-    }
+//    private fun getUrlId(url: String) : Int? {
+//        var id: Int? = null
+//        CoroutineScope(Dispatchers.IO).launch {
+//            id = MyRoomDatabase.getInstance(this@WebViewActivity).getTabDao()
+//                .selectUrlId(url)
+//        }
+//        Log.e("id is $id")
+//        return id
+//    }
 
     private var time : Long = 0
     override fun onBackPressed() {

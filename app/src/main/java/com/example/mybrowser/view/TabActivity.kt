@@ -24,7 +24,10 @@ class TabActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTabBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        tabCount = Pref.getInstance(this@TabActivity)?.getString(Pref.TAB_COUNT)!!
+        tabCount = Pref.getInstance(this@TabActivity)?.getString(Pref.TAB_COUNT)?.let {
+            if(it == "") return@let 0.toString()
+            else return@let it
+        }.toString()
 
         actionBar?.hide()
         setSupportActionBar(binding.tbTabToolbar)

@@ -16,13 +16,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MyWebClient(private val binding: ActivityWebViewBinding, private val id: Int?) : WebViewClient() {
+class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient() {
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         view?.let {
             binding.apply {
                 ivNext.isEnabled = it.canGoForward()
                 ivPrev.isEnabled = it.canGoBack()
+                CoroutineScope(Dispatchers.IO).launch {
+                    val list = MyRoomDatabase.getInstance(view.context).getTabDao()
+                        .distinctCheckTab(url.toString())
+                    withContext(Dispatchers.Main) {
+                        if(list.isEmpty()) {
+                            ivBookmark.setImageResource(R.drawable.ic_baseline_star_border_24)
+                        }
+                        else {
+                            ivBookmark.setImageResource(R.drawable.ic_baseline_star_24)
+                        }
+                    }
+                }
             }
             url?.let {
                 binding.url.text = it

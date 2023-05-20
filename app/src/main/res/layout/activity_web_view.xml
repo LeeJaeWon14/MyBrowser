@@ -75,14 +75,11 @@
             android:id="@+id/sl_web_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
-            <androidx.core.widget.NestedScrollView
+            <WebView
+                android:id="@+id/wv_web_view"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-                <WebView
-                    android:id="@+id/wv_web_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </androidx.core.widget.NestedScrollView>
+                android:layout_height="match_parent"
+                android:scrollbars="vertical"/>
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <TextView

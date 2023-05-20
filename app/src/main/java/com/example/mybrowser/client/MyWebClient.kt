@@ -18,6 +18,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient() {
+    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+        Log.e("shouldOverrideUrlLoading()")
+
+        return if(view?.url?.startsWith("http://") == true) {
+            view.url?.replace("http", "https")?.let { view.loadUrl(it) }
+            true
+        } else false
+    }
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         view?.let {
@@ -82,7 +90,8 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
         view?.let {
             when(error?.description) {
                 it.context.getString(R.string.str_err_cleartext) -> {
-                    it.loadUrl(request?.url.toString().replace("http", "https"))
+//                    it.loadUrl(request?.url.toString().replace("http", "https"))
+                    Log.e(it.context.getString(R.string.str_err_cleartext))
                 }
                 else -> {
                     Log.e("Got Error, code is ${error?.description} and ${error?.errorCode}! request is ${request?.requestHeaders}")

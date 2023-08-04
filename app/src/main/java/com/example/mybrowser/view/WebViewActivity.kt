@@ -89,6 +89,7 @@ class WebViewActivity : AppCompatActivity() {
                     useWideViewPort = true
                     cacheMode = WebSettings.LOAD_DEFAULT
                     textZoom = 95 // Set text size of WebView, Default is 100.
+                    domStorageEnabled = true
                 }
                 if(isEmptyHome()?.not() == true)
                 {

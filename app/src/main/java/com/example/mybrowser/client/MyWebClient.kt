@@ -1,11 +1,8 @@
 package com.example.mybrowser.client
 
 import android.graphics.Bitmap
+import android.webkit.*
 import com.example.mybrowser.util.Log
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.Toast
 import com.example.mybrowser.R
 import com.example.mybrowser.databinding.ActivityWebViewBinding
@@ -100,5 +97,15 @@ class MyWebClient(private val binding: ActivityWebViewBinding) : WebViewClient()
                 }
             }
         }
+    }
+
+    override fun onReceivedHttpError(
+        view: WebView?,
+        request: WebResourceRequest?,
+        errorResponse: WebResourceResponse?
+    ) {
+        super.onReceivedHttpError(view, request, errorResponse)
+        Log.e("onReceivedHttpError()")
+
     }
 }
